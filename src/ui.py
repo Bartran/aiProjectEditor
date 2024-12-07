@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
 
     def populate_tree(self, folder_path, parent_item):
         """
-        Recursively populate the tree with files and subfolders
+        Recursively populate the tree with subfolders at the top and files below them
         """
         folder_item = QTreeWidgetItem(parent_item)
         folder_item.setText(0, os.path.basename(folder_path))
@@ -117,18 +117,24 @@ class MainWindow(QMainWindow):
         folder_item.setFlags(folder_item.flags() | Qt.ItemIsUserCheckable)
         folder_item.setCheckState(0, Qt.Unchecked)
 
-        for item in sorted(os.listdir(folder_path)):
-            item_path = os.path.join(folder_path, item)
-            if os.path.isdir(item_path):
-                # Recursively add subfolders
-                self.populate_tree(item_path, folder_item)
-            else:
-                # Add files
-                file_item = QTreeWidgetItem(folder_item)
-                file_item.setText(0, item)
-                file_item.setData(0, Qt.UserRole, item_path)
-                file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable)
-                file_item.setCheckState(0, Qt.Unchecked)
+        # Separate subfolders and files
+        entries = os.listdir(folder_path)
+        subfolders = [item for item in entries if os.path.isdir(os.path.join(folder_path, item))]
+        files = [item for item in entries if not os.path.isdir(os.path.join(folder_path, item))]
+
+        # Add subfolders
+        for subfolder in sorted(subfolders):  # Sort alphabetically
+            subfolder_path = os.path.join(folder_path, subfolder)
+            self.populate_tree(subfolder_path, folder_item)
+
+        # Add files
+        for file in sorted(files):  # Sort alphabetically
+            file_path = os.path.join(folder_path, file)
+            file_item = QTreeWidgetItem(folder_item)
+            file_item.setText(0, file)
+            file_item.setData(0, Qt.UserRole, file_path)
+            file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable)
+            file_item.setCheckState(0, Qt.Unchecked)
 
     def file_selection_changed(self, item):
         """
