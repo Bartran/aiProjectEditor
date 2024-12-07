@@ -6,12 +6,11 @@ from PyQt5.QtWidgets import (
     QFileDialog, QLabel, QMessageBox, QTreeWidget, QTreeWidgetItem, QSplitter,
     QListWidget, QInputDialog
 )
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QFont, QIcon
 
 from src.file_manager import FileManager
 from src.session_storage import SessionStorage
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -21,15 +20,18 @@ class MainWindow(QMainWindow):
         self.setStyleSheet("""
             QMainWindow { background-color: #f0f0f0; }
             QTreeWidget { background-color: white; border: 1px solid #d0d0d0; }
-            QTextEdit { background-color: white; border: 1px solid #d0d0d0; }
-            QPushButton { 
-                background-color: #4CAF50; 
-                color: white; 
-                border: none; 
-                padding: 8px; 
-                border-radius: 4px; 
+            QTextEdit { background-color: white; border: 1px solid #d0d0d0; font-size: 14px; }
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 4px;
+                font-size: 14px;
             }
             QPushButton:hover { background-color: #45a049; }
+            QLabel { font-size: 14px; }
+            QListWidget { font-size: 14px; }
         """)
 
         # Initialize components
@@ -51,14 +53,19 @@ class MainWindow(QMainWindow):
         # Left Panel: File Selection
         file_panel = QWidget()
         file_layout = QVBoxLayout()
+        file_layout.setContentsMargins(5, 5, 5, 5)  # Add padding
+        file_layout.setSpacing(10)  # Add spacing
 
-        select_folder_btn = QPushButton("Select Folder")
+        select_folder_btn = QPushButton(QIcon("icons/folder.png"), " Select Folder")  # Added icon
         select_folder_btn.clicked.connect(self.select_folder)
         file_layout.addWidget(select_folder_btn)
 
         self.file_tree = QTreeWidget()
-        self.file_tree.setHeaderLabel("Project Files")
+        self.file_tree.setHeaderHidden(True)  # Simplified header
         self.file_tree.itemChanged.connect(self.file_selection_changed)
+        self.file_tree.setDragEnabled(True)  # Enable drag and drop
+        self.file_tree.setAcceptDrops(True)
+        self.file_tree.setDragDropMode(QTreeWidget.InternalMove)
         file_layout.addWidget(self.file_tree)
 
         file_panel.setLayout(file_layout)
@@ -67,12 +74,14 @@ class MainWindow(QMainWindow):
         # Right Panel: Context and Actions
         context_panel = QWidget()
         context_layout = QVBoxLayout()
+        context_layout.setContentsMargins(5, 5, 5, 5)
+        context_layout.setSpacing(10)
 
         # Action Buttons
         actions_layout = QHBoxLayout()
-        copy_context_btn = QPushButton("Copy Context")
+        copy_context_btn = QPushButton(QIcon("icons/copy.png"), " Copy Context")  # Added icon
         copy_context_btn.clicked.connect(self.copy_context)
-        reload_context_btn = QPushButton("Reload Files")
+        reload_context_btn = QPushButton(QIcon("icons/reload.png"), " Reload Files")  # Added icon
         reload_context_btn.clicked.connect(self.reload_selected_files)
         actions_layout.addWidget(copy_context_btn)
         actions_layout.addWidget(reload_context_btn)
@@ -85,14 +94,14 @@ class MainWindow(QMainWindow):
         context_layout.addWidget(self.context_display)
 
         # Save Session Button
-        save_session_btn = QPushButton("Save Session")
+        save_session_btn = QPushButton(QIcon("icons/save.png"), " Save Session")  # Added icon
         save_session_btn.clicked.connect(self.save_current_session)
         context_layout.addWidget(save_session_btn)
 
         # Previous Sessions List
+        context_layout.addWidget(QLabel("Previous Sessions:"))
         self.sessions_list = QListWidget()
         self.sessions_list.itemDoubleClicked.connect(self.load_session)
-        context_layout.addWidget(QLabel("Previous Sessions:"))
         context_layout.addWidget(self.sessions_list)
 
         context_panel.setLayout(context_layout)
@@ -107,6 +116,14 @@ class MainWindow(QMainWindow):
         # Load previous sessions on startup
         self.load_previous_sessions()
 
+        # Set the application font
+        app_font = QFont("Arial", 12)  # Changed font and size
+        self.setFont(app_font)
+
+        # Create icons folder if it doesn't exist
+        if not os.path.exists("icons"):
+            os.makedirs("icons")
+
     def select_folder(self):
         folder_path = QFileDialog.getExistingDirectory(self, "Select Folder")
         if folder_path:
@@ -117,8 +134,9 @@ class MainWindow(QMainWindow):
         folder_item = QTreeWidgetItem(parent_item)
         folder_item.setText(0, os.path.basename(folder_path))
         folder_item.setData(0, Qt.UserRole, folder_path)
-        folder_item.setFlags(folder_item.flags() | Qt.ItemIsUserCheckable)
+        folder_item.setFlags(folder_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
         folder_item.setCheckState(0, Qt.Unchecked)
+        folder_item.setIcon(0, QIcon("icons/folder.png"))  # Set folder icon
 
         for entry in sorted(os.listdir(folder_path)):
             full_path = os.path.join(folder_path, entry)
@@ -128,14 +146,28 @@ class MainWindow(QMainWindow):
                 file_item = QTreeWidgetItem(folder_item)
                 file_item.setText(0, entry)
                 file_item.setData(0, Qt.UserRole, full_path)
-                file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable)
+                file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
                 file_item.setCheckState(0, Qt.Unchecked)
+                file_item.setIcon(0, self.get_file_icon(entry))  # Set file icon based on extension
+
+    def get_file_icon(self, filename):
+        """Returns an icon based on the file extension."""
+        _, ext = os.path.splitext(filename)
+        if ext == ".txt":
+            return QIcon("icons/txt.png")
+        elif ext == ".py":
+            return QIcon("icons/py.png")
+        elif ext == ".md":
+            return QIcon("icons/md.png")
+        else:
+            return QIcon("icons/file.png")  # Default file icon
 
     def file_selection_changed(self, item):
         if item.childCount() > 0:  # Folder item
+            new_state = item.checkState(0)
             for i in range(item.childCount()):
                 child = item.child(i)
-                child.setCheckState(0, item.checkState(0))
+                child.setCheckState(0, new_state)
         else:  # File item
             self.update_selected_files()
             self.update_context_display()
@@ -200,12 +232,12 @@ class MainWindow(QMainWindow):
             item_text = f"{session_name} - {len(session_data['selected_files'])} files"
             self.sessions_list.addItem(item_text)
 
-
     def load_session(self, item):
         index = self.sessions_list.row(item)
         sessions = self.session_storage.get_sessions()
-        selected_session = sessions[index]
+        selected_session = list(sessions.values())[index]  # Get session by index
         self.clear_file_selection()
+
         for file_path in selected_session['selected_files']:
             self.find_and_check_file(file_path)
 
@@ -227,6 +259,11 @@ class MainWindow(QMainWindow):
     def search_file_in_item(self, item, file_path):
         if item.data(0, Qt.UserRole) == file_path:
             item.setCheckState(0, Qt.Checked)
+            # Expand all parent items to make the checked item visible
+            parent = item.parent()
+            while parent:
+                parent.setExpanded(True)
+                parent = parent.parent()
             return True
         for i in range(item.childCount()):
             if self.search_file_in_item(item.child(i), file_path):
