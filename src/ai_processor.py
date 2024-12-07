@@ -2,11 +2,6 @@ import os
 from openai import OpenAI
 import google.generativeai as genai
 
-from dotenv import load_dotenv  # Import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
 
 class AIProcessor:
     def __init__(self, openai_api_key=None, google_api_key=None):
@@ -17,55 +12,61 @@ class AIProcessor:
             openai_api_key (str, optional): OpenAI API key
             google_api_key (str, optional): Google AI Studio API key
         """
-        self.openai_client = OpenAI(api_key=openai_api_key) if openai_api_key else None
-        genai.configure(api_key=google_api_key) if google_api_key else None
-        self.google_model = genai.GenerativeModel('gemini-1.5-flash') if google_api_key else None
+        # Use environment variables if not provided
+        self.openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', openai_api_key))
 
-    def process_with_openai(self, messages, context_files):
+        # Configure Google AI
+        google_key = os.environ.get('GOOGLE_API_KEY', google_api_key)
+        if google_key:
+            genai.configure(api_key=google_key)
+
+    def process(self, provider, model, messages, context_files):
         """
-        Process conversation using OpenAI's API.
+        Process conversation using the specified provider and model.
 
         Args:
+            provider (str): AI provider (OpenAI or Google AI)
+            model (str): Specific model to use
             messages (list): Conversation messages
             context_files (list): Files to include in context
 
         Returns:
             str: AI response
         """
-        if not self.openai_client:
-            raise ValueError("OpenAI API key not configured")
+        # Prepare context
+        context_text = "\n".join([f"Context from {file['path']}: {file['content']}" for file in context_files])
 
-        # Append context file contents to messages
-        enhanced_messages = messages.copy()
-        for file in context_files:
-            enhanced_messages.insert(0, {
-                "role": "system",
-                "content": f"Context from file {file['path']}: {file['content']}"
-            })
+        # Modify messages to include context
+        enhanced_messages = [
+                                {"role": "system", "content": context_text}
+                            ] + messages
 
+        if provider == "OpenAI":
+            return self._process_openai(model, enhanced_messages)
+        elif provider == "Google AI":
+            return self._process_google(model, enhanced_messages)
+        else:
+            raise ValueError(f"Unsupported provider: {provider}")
+
+    def _process_openai(self, model, messages):
+        """
+        Process conversation using OpenAI's API.
+        """
         response = self.openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=enhanced_messages
+            model=model,
+            messages=messages
         )
         return response.choices[0].message.content
 
-    def process_with_google(self, messages, context_files):
+    def _process_google(self, model, messages):
         """
         Process conversation using Google AI Studio.
-
-        Args:
-            messages (list): Conversation messages
-            context_files (list): Files to include in context
-
-        Returns:
-            str: AI response
         """
-        if not self.google_model:
-            raise ValueError("Google AI API key not configured")
+        # Combine messages into a single prompt
+        full_prompt = "\n".join([msg['content'] for msg in messages])
 
-        # Combine messages and context
-        context_text = "\n".join([f"Context from {file['path']}: {file['content']}" for file in context_files])
-        full_prompt = context_text + "\n" + "\n".join([msg['content'] for msg in messages])
+        # Select the appropriate Google model
+        google_model = genai.GenerativeModel(model)
 
-        response = self.google_model.generate_content(full_prompt)
+        response = google_model.generate_content(full_prompt)
         return response.text
