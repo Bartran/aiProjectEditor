@@ -4,7 +4,7 @@ import pyperclip
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QTextEdit,
     QFileDialog, QLabel, QMessageBox, QTreeWidget, QTreeWidgetItem, QSplitter,
-    QListWidget
+    QListWidget, QInputDialog
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -171,18 +171,35 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, "Files Reloaded", "Selected files have been reloaded!")
 
     def save_current_session(self):
+        """
+        Save current session with selected files
+        """
         if not self.selected_files:
             QMessageBox.warning(self, "No Files", "Please select files first.")
             return
-        self.session_storage.save_session(self.session_id, self.selected_files)
-        QMessageBox.information(self, "Session Saved", "Session saved successfully!")
-        self.load_previous_sessions()
+
+        # Prompt for the session name
+        session_name, ok = QInputDialog.getText(self, "Save Session", "Enter session name:")
+
+        if ok and session_name:
+            # Save the session with the provided name as the key
+            self.session_storage.save_session(session_name, self.selected_files)
+            QMessageBox.information(self, "Session Saved", f"Session '{session_name}' saved successfully.")
+
+            # Reload previous sessions
+            self.load_previous_sessions()
 
     def load_previous_sessions(self):
+        """
+        Load previous sessions into the sessions list
+        """
         self.sessions_list.clear()
         sessions = self.session_storage.get_sessions()
-        for session in sessions:
-            self.sessions_list.addItem(f"{session['timestamp']} - {len(session['selected_files'])} files")
+
+        for session_name, session_data in sessions.items():
+            item_text = f"{session_name} - {len(session_data['selected_files'])} files"
+            self.sessions_list.addItem(item_text)
+
 
     def load_session(self, item):
         index = self.sessions_list.row(item)
