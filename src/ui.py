@@ -4,7 +4,7 @@ import pyperclip
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
                              QListWidget, QListWidgetItem,
                              QPushButton, QTextEdit, QFileDialog, QLabel,
-                             QComboBox, QMessageBox)
+                             QComboBox, QMessageBox, QTreeWidget, QTreeWidgetItem)
 from PyQt5.QtCore import Qt
 
 from file_manager import FileManager
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         """
         Initialize the user interface
-        """
+         """
         central_widget = QWidget()
         main_layout = QHBoxLayout()
 
@@ -42,9 +42,10 @@ class MainWindow(QMainWindow):
         select_folder_btn.clicked.connect(self.select_folder)
         file_panel.addWidget(select_folder_btn)
 
-        self.file_list = QListWidget()
-        self.file_list.itemChanged.connect(self.file_selection_changed)
-        file_panel.addWidget(self.file_list)
+        self.file_tree = QTreeWidget()
+        self.file_tree.setHeaderLabel("Files")
+        self.file_tree.itemChanged.connect(self.file_selection_changed)
+        file_panel.addWidget(self.file_tree)
 
         # Right panel: Chat Interface
         chat_panel = QVBoxLayout()
@@ -99,36 +100,58 @@ class MainWindow(QMainWindow):
 
     def select_folder(self):
         """
-        Open a folder selection dialog and populate the file list
+        Open a folder selection dialog and populate the file tree with the folder structure
         """
         folder_path = QFileDialog.getExistingDirectory(self, "Select Folder")
         if folder_path:
-            self.file_list.clear()
-            files = self.file_manager.get_files_recursively(folder_path)
+            self.file_tree.clear()
+            self.populate_tree(folder_path, self.file_tree)
 
-            for file in files:
-                item = QListWidgetItem(os.path.basename(file))
-                item.setData(Qt.UserRole, file)  # Store full path as data
-                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-                item.setCheckState(Qt.Unchecked)
-                self.file_list.addItem(item)
+    def populate_tree(self, folder_path, parent_item):
+        """
+        Recursively populate the tree with files and subfolders
+        """
+        folder_item = QTreeWidgetItem(parent_item)
+        folder_item.setText(0, os.path.basename(folder_path))
+        folder_item.setData(0, Qt.UserRole, folder_path)
+        folder_item.setFlags(folder_item.flags() | Qt.ItemIsUserCheckable)
+        folder_item.setCheckState(0, Qt.Unchecked)
+
+        for item in sorted(os.listdir(folder_path)):
+            item_path = os.path.join(folder_path, item)
+            if os.path.isdir(item_path):
+                # Recursively add subfolders
+                self.populate_tree(item_path, folder_item)
+            else:
+                # Add files
+                file_item = QTreeWidgetItem(folder_item)
+                file_item.setText(0, item)
+                file_item.setData(0, Qt.UserRole, item_path)
+                file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable)
+                file_item.setCheckState(0, Qt.Unchecked)
 
     def file_selection_changed(self, item):
         """
-        Handle file selection changes in the file list
+        Handle file selection changes in the file tree
         """
-        file_path = item.data(Qt.UserRole)
-        if item.checkState() == Qt.Checked and file_path not in [f['path'] for f in self.selected_files]:
-            try:
-                file_content = self.file_manager.read_file_content(file_path)
-                self.selected_files.append({
-                    'path': file_path,
-                    'content': file_content
-                })
-            except Exception as e:
-                QMessageBox.warning(self, "File Read Error", f"Could not read file {file_path}: {str(e)}")
-        elif item.checkState() == Qt.Unchecked:
-            self.selected_files = [f for f in self.selected_files if f['path'] != file_path]
+        file_path = item.data(0, Qt.UserRole)
+
+        if item.childCount() > 0:  # It's a folder
+            for i in range(item.childCount()):
+                child = item.child(i)
+                child.setCheckState(0, item.checkState(0))
+        else:  # It's an individual file
+            if item.checkState(0) == Qt.Checked and file_path not in [f['path'] for f in self.selected_files]:
+                try:
+                    file_content = self.file_manager.read_file_content(file_path)
+                    self.selected_files.append({
+                        'path': file_path,
+                        'content': file_content
+                    })
+                except Exception as e:
+                    QMessageBox.warning(self, "File Read Error", f"Could not read file {file_path}: {str(e)}")
+            elif item.checkState(0) == Qt.Unchecked:
+                self.selected_files = [f for f in self.selected_files if f['path'] != file_path]
 
     def update_model_selector(self):
         """
