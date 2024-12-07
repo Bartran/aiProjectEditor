@@ -12,6 +12,7 @@ from PyQt5.QtGui import QFont, QIcon
 from src.file_manager import FileManager
 from src.session_storage import SessionStorage
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -120,10 +121,6 @@ class MainWindow(QMainWindow):
         app_font = QFont("Arial", 12)  # Changed font and size
         self.setFont(app_font)
 
-        # Create icons folder if it doesn't exist
-        if not os.path.exists("icons"):
-            os.makedirs("icons")
-
     def select_folder(self):
         folder_path = QFileDialog.getExistingDirectory(self, "Select Folder")
         if folder_path:
@@ -134,7 +131,8 @@ class MainWindow(QMainWindow):
         folder_item = QTreeWidgetItem(parent_item)
         folder_item.setText(0, os.path.basename(folder_path))
         folder_item.setData(0, Qt.UserRole, folder_path)
-        folder_item.setFlags(folder_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
+        folder_item.setFlags(
+            folder_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
         folder_item.setCheckState(0, Qt.Unchecked)
         folder_item.setIcon(0, QIcon("icons/folder.png"))  # Set folder icon
 
@@ -146,21 +144,22 @@ class MainWindow(QMainWindow):
                 file_item = QTreeWidgetItem(folder_item)
                 file_item.setText(0, entry)
                 file_item.setData(0, Qt.UserRole, full_path)
-                file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
+                file_item.setFlags(
+                    file_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
                 file_item.setCheckState(0, Qt.Unchecked)
                 file_item.setIcon(0, self.get_file_icon(entry))  # Set file icon based on extension
 
     def get_file_icon(self, filename):
         """Returns an icon based on the file extension."""
         _, ext = os.path.splitext(filename)
-        if ext == ".txt":
-            return QIcon("icons/txt.png")
-        elif ext == ".py":
+        if ext == ".py":
             return QIcon("icons/py.png")
+        elif ext == ".java":
+            return QIcon("icons/java.png")
         elif ext == ".md":
             return QIcon("icons/md.png")
         else:
-            return QIcon("icons/file.png")  # Default file icon
+            return QIcon("icons/documents.png")  # Default file icon
 
     def file_selection_changed(self, item):
         if item.childCount() > 0:  # Folder item
