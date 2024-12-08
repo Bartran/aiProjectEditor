@@ -24,6 +24,11 @@ def populate_tree(self, folder_path, parent_item):
 
     for entry in sorted(os.listdir(folder_path)):
         full_path = os.path.join(folder_path, entry)
+
+        # Exclude __pycache__ directories
+        if entry == "__pycache__" or entry == "__init__.py":
+            continue
+
         if os.path.isdir(full_path):
             self.populate_tree(full_path, folder_item)
         else:
