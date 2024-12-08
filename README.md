@@ -9,3 +9,9 @@ Click on the ones you want to add to the context, and then copy context. If the 
 Use it on your own risk, you will be better off downloading and reading the code.
 
 ![image](https://github.com/user-attachments/assets/754326b2-8049-4b39-a203-6d344d2c5de3)
+
+
+
+Executable:
+
+(base) (venv) PS C:\...\aiProjectEditor> pyinstaller --onefile --add-data "src;src" --add-data "icons;icons" --hidden-import=json  src/main.py
