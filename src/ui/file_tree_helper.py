@@ -74,7 +74,7 @@ def clear_item_selection(self, item):
 def find_and_check_file(self, file_path):
     for i in range(self.file_tree.topLevelItemCount()):
         item = self.file_tree.topLevelItem(i)
-        if self.search_file_in_item(item, file_path):
+        if search_file_in_item(self, item, file_path):
             break
 
 

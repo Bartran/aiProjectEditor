@@ -1,7 +1,7 @@
 import uuid
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QTextEdit, QLabel, QTreeWidget, QSplitter,
-    QListWidget
+    QListWidget, QFileDialog
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon
@@ -19,6 +19,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("File Context Collector")
         self.resize(1200, 800)
+        self.current_folder_path = None
         self.setStyleSheet("""
             QMainWindow { background-color: #f0f0f0; }
             QTreeWidget { background-color: white; border: 1px solid #d0d0d0; }
@@ -125,8 +126,27 @@ class MainWindow(QMainWindow):
         app_font = QFont("Arial", 12)  # Changed font and size
         self.setFont(app_font)
 
+    def select_folder(self):
+        folder_path = QFileDialog.getExistingDirectory(self, "Select Folder")
+        if folder_path:
+            self.current_folder_path = folder_path
+            self.file_tree.clear()
+            self.populate_tree(folder_path, self.file_tree)
+
+    def populate_tree_from_session(self, folder_path):
+        """
+        Populates the file tree from a given folder path (used when loading a session).
+        """
+        self.file_tree.clear()
+        self.populate_tree(folder_path, self.file_tree)
+
+    def get_current_folder_path(self):
+        """
+        Returns the path of the currently selected folder or None.
+        """
+        return self.current_folder_path
+
     # Main UI methods
-    select_folder = select_folder
     populate_tree = populate_tree
     get_file_icon = get_file_icon
     file_selection_changed = file_selection_changed

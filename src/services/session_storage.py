@@ -13,25 +13,26 @@ class SessionStorage:
         self.storage_dir = storage_dir
         os.makedirs(storage_dir, exist_ok=True)
 
-    def save_session(self, session_id, selected_files):
+    def save_session(self, session_id, selected_files, folder_path):  # Add folder_path
         """
-        Save session with selected files.
+        Save session with selected files and folder path.
 
         Args:
             session_id (str): Unique identifier for the session
             selected_files (list): List of file dictionaries
+            folder_path (str): Path of the selected folder
         """
         filename = f"{session_id}.json"
         filepath = os.path.join(self.storage_dir, filename)
 
-        # Check if the session ID already exists and prevent overwriting
         if os.path.exists(filepath):
             raise ValueError(f"Session with ID '{session_id}' already exists.")
 
         session_data = {
             'session_id': session_id,
             'timestamp': datetime.now().strftime("%Y%m%d_%H%M%S"),
-            'selected_files': selected_files
+            'selected_files': selected_files,
+            'folder_path': folder_path  # Store folder path
         }
 
         with open(filepath, 'w', encoding='utf-8') as f:
