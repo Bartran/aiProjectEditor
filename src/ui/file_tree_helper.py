@@ -69,25 +69,3 @@ def clear_item_selection(self, item):
     item.setCheckState(0, Qt.Unchecked)
     for i in range(item.childCount()):
         self.clear_item_selection(item.child(i))
-
-
-def find_and_check_file(self, file_path):
-    for i in range(self.file_tree.topLevelItemCount()):
-        item = self.file_tree.topLevelItem(i)
-        if search_file_in_item(self, item, file_path):
-            break
-
-
-def search_file_in_item(self, item, file_path):
-    if item.data(0, Qt.UserRole) == file_path:
-        item.setCheckState(0, Qt.Checked)
-        # Expand all parent items to make the checked item visible
-        parent = item.parent()
-        while parent:
-            parent.setExpanded(True)
-            parent = parent.parent()
-        return True
-    for i in range(item.childCount()):
-        if self.search_file_in_item(item.child(i), file_path):
-            return True
-    return False

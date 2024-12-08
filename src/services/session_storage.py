@@ -2,6 +2,7 @@ import os
 import json
 from datetime import datetime
 
+
 class SessionStorage:
     def __init__(self, storage_dir='sessions'):
         """
@@ -13,13 +14,12 @@ class SessionStorage:
         self.storage_dir = storage_dir
         os.makedirs(storage_dir, exist_ok=True)
 
-    def save_session(self, session_id, selected_files, folder_path):  # Add folder_path
+    def save_session(self, session_id, folder_path):  # Add folder_path
         """
         Save session with selected files and folder path.
 
         Args:
             session_id (str): Unique identifier for the session
-            selected_files (list): List of file dictionaries
             folder_path (str): Path of the selected folder
         """
         filename = f"{session_id}.json"
@@ -31,7 +31,6 @@ class SessionStorage:
         session_data = {
             'session_id': session_id,
             'timestamp': datetime.now().strftime("%Y%m%d_%H%M%S"),
-            'selected_files': selected_files,
             'folder_path': folder_path  # Store folder path
         }
 

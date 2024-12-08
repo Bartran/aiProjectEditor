@@ -15,7 +15,7 @@ def save_current_session(self):
 
     if ok and session_name:
         # Store selected_files directly as a list
-        self.session_storage.save_session(session_name, self.selected_files, folder_path)  # Corrected this line
+        self.session_storage.save_session(session_name, folder_path)  # Corrected this line
         QMessageBox.information(self, "Session Saved", f"Session '{session_name}' saved successfully.")
         self.load_previous_sessions()
 
@@ -29,7 +29,7 @@ def load_previous_sessions(self):
 
     for session_name, session_data in sessions.items():
         folder_path = session_data.get('folder_path', 'N/A')
-        item_text = f"{session_name} - {len(session_data['selected_files'])} files - Folder: {folder_path}"
+        item_text = f"{session_name} - Folder: {folder_path}"
         self.sessions_list.addItem(item_text)
 
 
@@ -43,6 +43,3 @@ def load_session(self, item):
     folder_path = selected_session.get('folder_path')
     if folder_path:
         self.populate_tree_from_session(folder_path)
-
-        for file_path in selected_session['selected_files']:
-            self.find_and_check_file(file_path)

@@ -9,7 +9,7 @@ from PyQt5.QtGui import QFont, QIcon
 from src.services.file_manager import FileManager
 from src.services.session_storage import SessionStorage
 from src.ui.context_helper import copy_context, reload_selected_files, update_selected_files, update_context_display
-from src.ui.file_tree_helper import select_folder, file_selection_changed, clear_file_selection, find_and_check_file, \
+from src.ui.file_tree_helper import file_selection_changed,clear_file_selection, \
     get_file_icon, populate_tree
 from src.ui.session_helper import save_current_session, load_session, load_previous_sessions
 
@@ -151,7 +151,6 @@ class MainWindow(QMainWindow):
     get_file_icon = get_file_icon
     file_selection_changed = file_selection_changed
     clear_file_selection = clear_file_selection
-    find_and_check_file = find_and_check_file
     copy_context = copy_context
     reload_selected_files = reload_selected_files
     update_selected_files = update_selected_files
