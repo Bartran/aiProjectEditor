@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QFileDialog, QLabel, QMessageBox, QTreeWidget, QTreeWidgetItem, QSplitter,
     QListWidget, QInputDialog
 )
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon
 
 from src.file_manager import FileManager
