@@ -9,8 +9,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon
 
-from src.file_manager import FileManager
-from src.session_storage import SessionStorage
+from src.services.file_manager import FileManager
+from src.services.session_storage import SessionStorage
 
 
 class MainWindow(QMainWindow):
