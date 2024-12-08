@@ -61,11 +61,6 @@ def file_selection_changed(self, item):
 
 
 def clear_file_selection(self):
-    for i in range(self.file_tree.topLevelItemCount()):
-        self.clear_item_selection(self.file_tree.topLevelItem(i))
+    """Simplified clear method that just clears the tree widget"""
+    self.file_tree.clear()
 
-
-def clear_item_selection(self, item):
-    item.setCheckState(0, Qt.Unchecked)
-    for i in range(item.childCount()):
-        self.clear_item_selection(item.child(i))
